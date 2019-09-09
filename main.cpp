@@ -1,6 +1,10 @@
 #pragma comment(lib, "Strmiids.lib")
 #include <dshow.h>
 
+void Play();
+void Pause();
+void FastForward();
+
 void main(void)
 {
     IGraphBuilder *pGraph = NULL;
@@ -52,4 +56,14 @@ void main(void)
     pEvent->Release();
     pGraph->Release();
     CoUninitialize();
+}
+
+void Play() {
+
+}
+void Pause() {
+
+}
+void FastForward() {
+
 }
