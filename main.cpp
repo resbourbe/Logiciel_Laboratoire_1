@@ -1,10 +1,12 @@
 #pragma comment(lib, "Strmiids.lib")
 #include <dshow.h>
+#include <conio.h>
 
-void Play();
-void Pause();
-void FastForward();
-
+enum VideoStage {
+	STAGE_PLAY,
+	STAGE_PAUSE,
+	STAGE_FORWARD,
+};
 void main(void)
 {
     IGraphBuilder *pGraph = NULL;
@@ -31,16 +33,70 @@ void main(void)
 
     hr = pGraph->QueryInterface(IID_IMediaControl, (void **)&pControl);
     hr = pGraph->QueryInterface(IID_IMediaEvent, (void **)&pEvent);
+	hr = pGraph->QueryInterface(IID_IMediaSeeking, (void **)&pSeek);
 
     // Build the graph. IMPORTANT: Change this string to a file on your system.
     hr = pGraph->RenderFile(L"C:\\Example.avi", NULL);
     
+	VideoStage stage;
+
     if (SUCCEEDED(hr))
     {
         // Run the graph.
 
         hr = pControl->Run();
-	
+		stage = STAGE_PLAY;
+		
+		while (true)
+		{
+			int choix;
+			choix = _getch();
+			
+			switch (choix) {
+			case 'p' :
+				if (stage == STAGE_PLAY) {
+					hr = pControl->Pause();
+					stage = STAGE_PAUSE;
+				} else if (stage == STAGE_PAUSE) {
+					hr = pControl->Run();
+					stage = STAGE_PLAY;
+				} else {
+					hr = pControl->Pause();
+					stage = STAGE_PAUSE;
+				}
+				break;
+			case 'a' :
+				if (stage != STAGE_FORWARD) {
+					stage = STAGE_FORWARD;
+					hr = pSeek->SetRate(2.0);
+				} else {
+					hr = pSeek->SetRate(1.0);
+					stage = STAGE_PLAY;
+				}
+				break;
+			case 'r' :
+				hr = pSeek->IsFormatSupported(&TIME_FORMAT_FRAME);
+				if (hr == S_OK)
+				{
+					hr = pSeek->SetTimeFormat(&TIME_FORMAT_FRAME);
+					if (SUCCEEDED(hr))
+					{
+						// Seek to frame number 0.
+						LONGLONG rtNow = 0;
+						hr = pSeek->SetPositions(
+							&rtNow, AM_SEEKING_AbsolutePositioning,
+							0, AM_SEEKING_NoPositioning);
+					}
+				}
+				break;
+			case 'q' :
+				goto fin;
+				break;
+			default:
+				break;
+			}
+				
+		}
         if (SUCCEEDED(hr))
         {
             // Wait for completion.
@@ -51,19 +107,9 @@ void main(void)
             // can block indefinitely.
         }
     }
-    
+fin:
     pControl->Release();
     pEvent->Release();
     pGraph->Release();
     CoUninitialize();
-}
-
-void Play() {
-
-}
-void Pause() {
-
-}
-void FastForward() {
-
 }
