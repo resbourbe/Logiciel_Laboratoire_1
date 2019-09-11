@@ -1,12 +1,15 @@
 #pragma comment(lib, "Strmiids.lib")
 #include <dshow.h>
 #include <conio.h>
+#include <iostream>
+
 
 enum VideoStage {
 	STAGE_PLAY,
 	STAGE_PAUSE,
 	STAGE_FORWARD,
 };
+void AfficherMenu();
 void main(void)
 {
     IGraphBuilder *pGraph = NULL;
@@ -39,7 +42,7 @@ void main(void)
     hr = pGraph->RenderFile(L"C:\\Example.avi", NULL);
     
 	VideoStage stage;
-
+	AfficherMenu();
     if (SUCCEEDED(hr))
     {
         // Run the graph.
@@ -54,18 +57,24 @@ void main(void)
 			
 			switch (choix) {
 			case 'p' :
+			case 'P' :
 				if (stage == STAGE_PLAY) {
 					hr = pControl->Pause();
 					stage = STAGE_PAUSE;
 				} else if (stage == STAGE_PAUSE) {
 					hr = pControl->Run();
 					stage = STAGE_PLAY;
-				} else {
+				} else if (stage == STAGE_FORWARD) {
+					hr = pSeek->SetRate(1.0);
+					stage = STAGE_PLAY;
+				}
+				else {
 					hr = pControl->Pause();
 					stage = STAGE_PAUSE;
 				}
 				break;
 			case 'a' :
+			case 'A':
 				if (stage != STAGE_FORWARD) {
 					stage = STAGE_FORWARD;
 					hr = pSeek->SetRate(2.0);
@@ -75,6 +84,7 @@ void main(void)
 				}
 				break;
 			case 'r' :
+			case 'R' :
 				hr = pSeek->IsFormatSupported(&TIME_FORMAT_FRAME);
 				if (hr == S_OK)
 				{
@@ -90,6 +100,7 @@ void main(void)
 				}
 				break;
 			case 'q' :
+			case 'Q' :
 				goto fin;
 				break;
 			default:
@@ -112,4 +123,12 @@ fin:
     pEvent->Release();
     pGraph->Release();
     CoUninitialize();
+}
+
+void AfficherMenu() {
+	std::cout << "Menu des commandes" << std::endl;
+	std::cout << "P - Lecture/Pause" << std::endl;
+	std::cout << "A - Avance Rapide" << std::endl;
+	std::cout << "R - Retour au debut" << std::endl;
+	std::cout << "Q - Quitter" << std::endl;
 }
